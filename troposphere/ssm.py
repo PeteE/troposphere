@@ -3,7 +3,7 @@
 #
 # See LICENSE file for full license.
 
-from . import AWSObject, AWSProperty
+from . import AWSObject, AWSProperty, Tags
 from .validators import (integer, boolean, s3_bucket_name, notification_type,
                          notification_event, json_checker, task_type,
                          operating_system, compliance_level)
@@ -12,7 +12,7 @@ from .validators import (integer, boolean, s3_bucket_name, notification_type,
 class NotificationConfig(AWSProperty):
     props = {
         'NotificationArn': (basestring, False),
-        'NotificationEvents': ([notification_event], False),
+        'NotificationEvents': (notification_event, False),
         'NotificationType': (notification_type, False),
     }
 
@@ -112,6 +112,7 @@ class Association(AWSObject):
     resource_type = "AWS::SSM::Association"
 
     props = {
+        'AssociationName': (basestring, False),
         'DocumentVersion': (basestring, False),
         'InstanceId': (basestring, False),
         'Name': (basestring, True),
@@ -128,6 +129,7 @@ class Document(AWSObject):
         # Need a better implementation of the SSM Document
         'Content': (dict, True),
         'DocumentType': (basestring, False),
+        'Tags': (Tags, False),
     }
 
 
@@ -181,6 +183,7 @@ class Parameter(AWSObject):
     resource_type = "AWS::SSM::Parameter"
 
     props = {
+        'AllowedPattern': (basestring, False),
         'Description': (basestring, False),
         'Name': (basestring, False),
         'Type': (basestring, True),

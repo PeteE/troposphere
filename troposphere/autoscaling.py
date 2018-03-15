@@ -58,6 +58,18 @@ class Tags(AWSHelperFn):
         return self.tags
 
 
+class LifecycleHookSpecification(AWSProperty):
+    props = {
+        'DefaultResult': (basestring, False),
+        'HeartbeatTimeout': (basestring, False),
+        'LifecycleHookName': (basestring, True),
+        'LifecycleTransition': (basestring, True),
+        'NotificationMetadata': (basestring, False),
+        'NotificationTargetARN': (basestring, False),
+        'RoleARN': (basestring, False),
+    }
+
+
 class NotificationConfigurations(AWSProperty):
     props = {
         'TopicARN': (basestring, True),
@@ -106,6 +118,7 @@ class AutoScalingGroup(AWSObject):
     resource_type = "AWS::AutoScaling::AutoScalingGroup"
 
     props = {
+        'AutoScalingGroupName': (basestring, False),
         'AvailabilityZones': (list, False),
         'Cooldown': (integer, False),
         'DesiredCapacity': (integer, False),
@@ -113,6 +126,8 @@ class AutoScalingGroup(AWSObject):
         'HealthCheckType': (basestring, False),
         'InstanceId': (basestring, False),
         'LaunchConfigurationName': (basestring, False),
+        'LifecycleHookSpecificationList':
+            ([LifecycleHookSpecification], False),
         'LoadBalancerNames': (list, False),
         'MaxSize': (integer, True),
         'MetricsCollection': ([MetricsCollection], False),

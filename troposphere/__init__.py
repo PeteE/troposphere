@@ -4,6 +4,7 @@
 # See LICENSE file for full license.
 
 
+import cfn_flip
 import collections
 import json
 import re
@@ -12,7 +13,7 @@ import types
 
 from . import validators
 
-__version__ = "2.0.2"
+__version__ = "2.2.1"
 
 # constants for DeletionPolicy
 Delete = 'Delete'
@@ -81,6 +82,8 @@ def depends_on_helper(obj):
     """
     if isinstance(obj, AWSObject):
         return obj.title
+    elif isinstance(obj, list):
+        return list(map(depends_on_helper, obj))
     return obj
 
 
@@ -322,6 +325,11 @@ class AWSDeclaration(BaseAWSObject):
     def __init__(self, title, **kwargs):
         super(AWSDeclaration, self).__init__(title, **kwargs)
 
+    def ref(self):
+        return Ref(self)
+
+    Ref = ref
+
 
 class AWSProperty(BaseAWSObject):
     """
@@ -402,6 +410,14 @@ class FindInMap(AWSHelperFn):
 class GetAtt(AWSHelperFn):
     def __init__(self, logicalName, attrName):  # noqa: N803
         self.data = {'Fn::GetAtt': [self.getdata(logicalName), attrName]}
+
+
+class GetCidr(AWSHelperFn):
+    def __init__(self, ipblock, count, sizemask=None):
+        if sizemask:
+            self.data = {'Fn::GetCidr': [ipblock, count, sizemask]}
+        else:
+            self.data = {'Fn::GetCidr': [ipblock, count]}
 
 
 class GetAZs(AWSHelperFn):
@@ -616,6 +632,9 @@ class Template(object):
     def to_json(self, indent=4, sort_keys=True, separators=(',', ': ')):
         return json.dumps(self.to_dict(), indent=indent,
                           sort_keys=sort_keys, separators=separators)
+
+    def to_yaml(self, long_form=False):
+        return cfn_flip.to_yaml(self.to_json(), long_form)
 
 
 class Export(AWSHelperFn):

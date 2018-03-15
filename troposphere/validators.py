@@ -217,6 +217,12 @@ def exactly_one(class_name, properties, conditionals):
     return specified_count
 
 
+def check_required(class_name, properties, conditionals):
+    for c in conditionals:
+        if c not in properties:
+            raise ValueError("Resource %s required in %s" % c, class_name)
+
+
 def json_checker(name, prop):
     from . import AWSHelperFn
 
@@ -289,3 +295,44 @@ def operating_system(os):
             )
         )
     return os
+
+
+def vpn_pre_shared_key(key):
+    pre_shared_key_match_re = compile(
+        r'^(?!0)([A-Za-z0-9]|\_|\.){8,64}$'
+    )
+    if not pre_shared_key_match_re.match(key):
+        raise ValueError(
+            '%s is not a valid key.'
+            ' Allowed characters are alphanumeric characters and ._. Must'
+            ' be between 8 and 64 characters in length and cannot'
+            ' start with zero (0).' % key
+        )
+    return(key)
+
+
+def vpn_tunnel_inside_cidr(cidr):
+    reserved_cidrs = [
+        '169.254.0.0/30',
+        '169.254.1.0/30',
+        '169.254.2.0/30',
+        '169.254.3.0/30',
+        '169.254.4.0/30',
+        '169.254.5.0/30',
+        '169.254.169.252/30'
+    ]
+    cidr_match_re = compile(
+        r'^169\.254\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)'
+        '\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\/30$'
+    )
+    if cidr in reserved_cidrs:
+        raise ValueError(
+            'The following CIDR blocks are reserved and cannot be used: "%s"' %
+            (', '.join(reserved_cidrs))
+        )
+    elif not cidr_match_re.match(cidr):
+        raise ValueError(
+            '%s is not a valid CIDR.'
+            ' A size /30 CIDR block from the 169.254.0.0/16 must be specified.'
+            % cidr)
+    return(cidr)

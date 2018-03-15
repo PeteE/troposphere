@@ -16,7 +16,7 @@ class ComputeResources(AWSProperty):
         "InstanceRole": (basestring, True),
         "InstanceTypes": ([basestring], True),
         "Ec2KeyPair": (basestring, False),
-        "Tags": ([basestring], False),
+        "Tags": (dict, False),
         "DesiredvCpus": (positive_integer, False)
     }
 
@@ -93,8 +93,8 @@ class JobDefinition(AWSObject):
     props = {
         "Type": (basestring, True),
         "Parameters": (dict, True),
-        "ContainerProperties": (ContainerProperties, False),
-        "JobDefinitionName": (basestring, True),
+        "ContainerProperties": (ContainerProperties, True),
+        "JobDefinitionName": (basestring, False),
         "RetryStrategy": (RetryStrategy, False)
     }
 

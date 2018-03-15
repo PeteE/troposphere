@@ -6,7 +6,7 @@
 from . import AWSHelperFn, AWSObject, AWSProperty, Tags
 from .validators import (
     boolean, exactly_one, integer, integer_range,
-    network_port, positive_integer
+    network_port, positive_integer, vpn_pre_shared_key, vpn_tunnel_inside_cidr
 )
 
 try:
@@ -143,6 +143,18 @@ class Placement(AWSProperty):
     }
 
 
+class CreditSpecification(AWSProperty):
+    props = {
+        'CPUCredits': (basestring, False),
+    }
+
+
+class ElasticGpuSpecification(AWSProperty):
+    props = {
+        'Type': (basestring, True),
+    }
+
+
 class Ipv6Addresses(AWSHelperFn):
     def __init__(self, address):
         self.data = {
@@ -205,8 +217,10 @@ class Instance(AWSObject):
         'Affinity': (basestring, False),
         'AvailabilityZone': (basestring, False),
         'BlockDeviceMappings': (list, False),
+        'CreditSpecification': (CreditSpecification, False),
         'DisableApiTermination': (boolean, False),
         'EbsOptimized': (boolean, False),
+        'ElasticGpuSpecifications': ([ElasticGpuSpecification], False),
         'HostId': (basestring, False),
         'IamInstanceProfile': (basestring, False),
         'ImageId': (basestring, True),
@@ -376,6 +390,7 @@ class SecurityGroupEgress(AWSObject):
     props = {
         'CidrIp': (basestring, False),
         'CidrIpv6': (basestring, False),
+        'Description': (basestring, False),
         'DestinationPrefixListId': (basestring, False),
         'DestinationSecurityGroupId': (basestring, False),
         'FromPort': (network_port, True),
@@ -408,6 +423,7 @@ class SecurityGroupIngress(AWSObject):
     props = {
         'CidrIp': (basestring, False),
         'CidrIpv6': (basestring, False),
+        'Description': (basestring, False),
         'FromPort': (network_port, False),  # conditional
         'GroupName': (basestring, False),
         'GroupId': (basestring, False),
@@ -432,6 +448,7 @@ class SecurityGroupRule(AWSProperty):
     props = {
         'CidrIp': (basestring, False),
         'CidrIpv6': (basestring, False),
+        'Description': (basestring, False),
         'FromPort': (network_port, False),
         'IpProtocol': (basestring, True),
         'SourceSecurityGroupId': (basestring, False),
@@ -521,6 +538,13 @@ class VolumeAttachment(AWSObject):
     }
 
 
+def instance_tenancy(value):
+    valid = ['default', 'dedicated']
+    if value not in valid:
+        raise ValueError('InstanceTenancy needs to be one of %r' % valid)
+    return value
+
+
 class VPC(AWSObject):
     resource_type = "AWS::EC2::VPC"
 
@@ -528,7 +552,7 @@ class VPC(AWSObject):
         'CidrBlock': (basestring, True),
         'EnableDnsSupport': (boolean, False),
         'EnableDnsHostnames': (boolean, False),
-        'InstanceTenancy': (basestring, False),
+        'InstanceTenancy': (instance_tenancy, False),
         'Tags': ((Tags, list), False),
     }
 
@@ -563,6 +587,13 @@ class VPCGatewayAttachment(AWSObject):
     }
 
 
+class VpnTunnelOptionsSpecification(AWSProperty):
+    props = {
+        'PreSharedKey': (vpn_pre_shared_key, False),
+        'TunnelInsideCidr': (vpn_tunnel_inside_cidr, False),
+    }
+
+
 class VPNConnection(AWSObject):
     resource_type = "AWS::EC2::VPNConnection"
 
@@ -572,6 +603,9 @@ class VPNConnection(AWSObject):
         'StaticRoutesOnly': (boolean, False),
         'Tags': ((Tags, list), False),
         'VpnGatewayId': (basestring, True),
+        'VpnTunnelOptionsSpecifications': (
+            [VpnTunnelOptionsSpecification], False
+        ),
     }
 
 
@@ -588,6 +622,7 @@ class VPNGateway(AWSObject):
     resource_type = "AWS::EC2::VPNGateway"
 
     props = {
+        'AmazonSideAsn': (positive_integer, False),
         'Type': (basestring, True),
         'Tags': ((Tags, list), False),
     }
@@ -648,6 +683,13 @@ class IamInstanceProfile(AWSProperty):
     }
 
 
+class SpotFleetTagSpecification(AWSProperty):
+    props = {
+        'ResourceType': (basestring, False),
+        'Tags': ((Tags, list), False),
+    }
+
+
 class LaunchSpecifications(AWSProperty):
     props = {
         'BlockDeviceMappings': ([BlockDeviceMapping], False),
@@ -664,6 +706,7 @@ class LaunchSpecifications(AWSProperty):
         'SecurityGroups': ([SecurityGroups], False),
         'SpotPrice': (basestring, False),
         'SubnetId': (basestring, False),
+        'TagSpecification': (SpotFleetTagSpecification, False),
         'UserData': (basestring, False),
         'WeightedCapacity': (positive_integer, False),
     }
@@ -676,7 +719,7 @@ class SpotFleetRequestConfigData(AWSProperty):
         'IamFleetRole': (basestring, True),
         'ReplaceUnhealthyInstances': (boolean, False),
         'LaunchSpecifications': ([LaunchSpecifications], True),
-        'SpotPrice': (basestring, True),
+        'SpotPrice': (basestring, False),
         'TargetCapacity': (positive_integer, True),
         'TerminateInstancesWithExpiration': (boolean, False),
         'Type': (basestring, False),
